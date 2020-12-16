@@ -1,0 +1,46 @@
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+
+library(shiny)
+library(wordcloud2)
+library(wordcloud)
+library(stopwords)
+library(dplyr)
+library(schrute)
+n<-1
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+
+    # Application title
+    titlePanel("Wordcloud of Most Commonly Used Words"),
+    numericInput('size', 'Size of wordcloud', n),
+    wordcloud2Output('wordcloud2')
+)
+    
+
+
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+    mydata <- schrute::theoffice
+    stop_words <- tidytext::stop_words
+    token.mydata <- mydata %>%
+        tidytext::unnest_tokens(word, text)
+    tidy.token.mydata <- token.mydata %>%
+        dplyr::anti_join(stop_words, by = "word")
+    tidy.token.mydata<- tidy.token.mydata %>%
+        dplyr::count(word, sort = TRUE) 
+    output$wordcloud2 <- renderWordcloud2({
+        wordcloud2(tidy.token.mydata,size=input$size)
+    })
+    
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
