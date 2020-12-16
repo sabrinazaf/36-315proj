@@ -1,0 +1,40 @@
+library(shiny)
+library(collapsibleTree)
+library(scales)
+library(shiny)
+office_ratings <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-17/office_ratings.csv')
+ui <- fluidPage(
+    
+    # Application title
+    titlePanel("Collapsible Tree of The Office Seasons/Episodes filled by IMDb Score (Gradient from Yellow to Red)"),
+        # Show a tree diagram with the selected root node
+        mainPanel(
+            collapsibleTreeOutput("plot", height = "500px")
+        )
+    )
+
+
+# Define server logic required to draw a collapsible tree diagram
+server <- function(input, output) {
+    pal <- scales::gradient_n_pal(colours = c("yellow","orange","red"), values = c(min(office_ratings$imdb_rating),median(office_ratings$imdb_rating),max(office_ratings$imdb_rating)))
+    output$plot <- renderCollapsibleTree({
+        collapsibleTree(
+            office_ratings,
+            hierarchy = c("season", "episode"),
+            inputId="tree",
+            root="Tree of Season/Episodes of The Office",
+            fill=c("seashell",
+                   rep("maroon", length(unique(office_ratings$season))),
+                   pal(office_ratings$imdb_rating))
+        )
+        
+    })
+    
+    output$str <- renderPrint(str(input$node))
+}
+
+  
+
+
+# Run the application 
+shinyApp(ui = ui, server = server)
